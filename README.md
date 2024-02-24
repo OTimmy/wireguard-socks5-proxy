@@ -2,7 +2,7 @@
 
 ## Description
 
-This Docker image allows the routing of application traffic through a VPN by utilizing a SOCKS5 proxy. It's ideal for conneting multiple individual applications to be routed trough one sinlge wireguard client.
+This Docker image allows the routing of application traffic through a VPN by utilizing a SOCKS5 proxy. It's ideal for connecting multiple individual applications to be routed trough one sinlge wireguard client.
 
 ## Docker Compose File
 
