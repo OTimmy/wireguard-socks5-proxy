@@ -1,0 +1,23 @@
+---
+version: '3'
+services:
+  proxy:
+    image: wireguard-socks5-proxy:latest
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 1080:1080
+      - 51820:51820
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+      - ./wg0.conf:/etc/wireguard/wg0.conf
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 15s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
+      
