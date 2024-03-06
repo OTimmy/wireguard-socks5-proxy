@@ -58,12 +58,16 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
-          images: otimmy/wireguard-socks5-proxy
+          tags: |
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=sha
+          flavor: |
+            latest=${{ github.ref == 'refs/heads/main' }}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
