@@ -1,8 +1,14 @@
 name: Docker
 
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
 
 on:
   push:
+    branches: [ "main" ]
+    # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
 
 env:
@@ -47,10 +53,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: otimmy/wireguard-socks5-proxy
+          flavor: |
+            latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref == 'refs/tags/latest' }}
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
