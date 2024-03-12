@@ -64,7 +64,14 @@ jobs:
 
       - name: Sign the published Docker image
         if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          IFS=' ' read -ra TAG_ARRAY <<< "${TAGS}"
+          for tag in "${TAG_ARRAY[@]}"; do
+            IMAGE_REF="${{ env.IMAGE_NAME }}:${tag}@${DIGEST}"
+            echo "Signing $IMAGE_REF"
+            cosign sign --yes "$IMAGE_REF"
+          done
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}}
+``
