@@ -8,11 +8,11 @@ on:
       - "v*.*.*"
   pull_request:
     branches:
-    - "main" 
+      - "main" 
 
 jobs:
   build:
-
+  
     runs-on: ubuntu-latest
     permissions:
       contents: read
