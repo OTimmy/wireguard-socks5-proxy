@@ -2,14 +2,13 @@ name: Docker
 
 on:
   push:
-    branches: [ "main" ]
-    tags: [ 'v*.*.*' ]
+    branches: 
+      - "main" 
+    tags:
+      - "v*.*.*"
   pull_request:
-    branches: [ "main" ]
-
-env:
-  IMAGE_NAME: otimmy/wireguard-socks5-proxy
-
+    branches:
+    - "main" 
 
 jobs:
   build:
@@ -23,12 +22,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@6e04d228eb30da1757ee4e1dd75a0ec73a653e06
-        with:
-          cosign-release: 'v2.1.1'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
