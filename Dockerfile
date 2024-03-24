@@ -52,4 +52,6 @@ RUN chmod +x /healthcheck.sh
 EXPOSE 1080
 EXPOSE 51820
 
+ENV LOCAL_NETWORK=192.168.1.0/24
+
 ENTRYPOINT ["/init"]

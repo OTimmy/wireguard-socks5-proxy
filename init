@@ -1,3 +1,6 @@
 #!/bin/bash
 wg-quick up wg0
+echo "Setting IP route table with given values for local network: $LOCAL_NETWORK"
+# This will allow packages to be routed back to the local network, otherwise they will be routed trough wg0
+ip route add $LOCAL_NETWORK dev eth0
 sockd
