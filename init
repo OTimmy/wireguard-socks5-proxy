@@ -1,8 +1,18 @@
 #!/bin/bash
+
 wg-quick up wg0
+
+if grep -q "^DNS" /etc/wireguard/wg0.conf; then
+    DNS=$(awk '/^DNS/{print $NF}' /etc/wireguard/wg0.conf)
+    echo "nameserver $DNS" > /etc/resolv.conf
+    echo "DNS found in config and set to $DNS"
+else
+    echo "No DNS found in config, skipping DNS setup."
+fi
+
 echo "Setting IP route table with given values for local network: $LOCAL_NETWORK"
-# This will allow packages to be routed back to the local network, otherwise they will be routed trough wg0
-# Creddit to https://github.com/trananhtuan
+# This will allow packages to be routed back to the local network, otherwise they will be routed through wg0
+# Credit to https://github.com/trananhtuan
 gw=$(ip route | awk '/default/ {print $3}')
 ip route add to ${LOCAL_NETWORK} via $gw dev eth0
 sockd
