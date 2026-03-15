@@ -15,10 +15,8 @@ services:
     image: wireguard-socks5-proxy:latest
     cap_add:
       - NET_ADMIN
-      - SYS_MODULE
     ports:
       - 1080:1080
-      - 51820:51820
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
     environment:

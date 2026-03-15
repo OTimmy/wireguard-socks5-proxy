@@ -1,56 +1,29 @@
-FROM alpine:latest as dantebuild
+FROM alpine:3.23.3
 
-ENV DANTE_FILE_NAME dante-1.4.3
-ENV DANTE_URL https://www.inet.no/dante/files/$DANTE_FILE_NAME.tar.gz
-ENV DANTE_SHA256 418a065fe1a4b8ace8fbf77c2da269a98f376e7115902e76cda7e741e4846a5d
-ENV ac_cv_func_sched_setscheduler no
+ARG WIREGUARD_TOOLS_VERSION=1.0.20250521-r1
+ARG DANTE_VERSION=1.4.4-r0
 
-RUN apk update && apk add --no-cache \
-    build-base \
-    curl &&\
-    curl -s $DANTE_URL -o $DANTE_FILE_NAME.tar.gz &&\
-    tar -xvf $DANTE_FILE_NAME.tar.gz &&\
-    cd $DANTE_FILE_NAME &&\
-    ./configure &&\
-    make &&\
-    make install
-
-FROM alpine:latest as wireguardbuild
-ENV WIREGUARD_TOOLS_REPO https://git.zx2c4.com/wireguard-tools
-
-COPY src_valid_mark_check_before_syscall_set_patch.git /patch.git
-
-RUN apk add --no-cache \
-    build-base \
-    linux-headers \
-    curl \
-    git &&\
-    git clone $WIREGUARD_TOOLS_REPO &&\
-    cd wireguard-tools &&\
-    git apply /patch.git &&\
-    make WITH_WGQUICK=yes -C src install
-
-FROM alpine:latest
 RUN apk add --no-cache \
     bash \
     openresolv \
     iptables \
+    ip6tables \
     iproute2 \
-    curl
-
-COPY --from=dantebuild /usr/local/sbin/sockd /usr/local/sbin/sockd
-COPY --from=wireguardbuild /usr/bin/wg /usr/bin/wg
-COPY --from=wireguardbuild /usr/bin/wg-quick /usr/bin/wg-quick
+    curl \
+    wireguard-tools=${WIREGUARD_TOOLS_VERSION} \
+    dante-server=${DANTE_VERSION} \
+ && echo 'Checking wg-quick for src_valid_mark patch target...' \
+ && grep -Fq '[[ $proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1' /usr/bin/wg-quick \
+ && echo 'Patching wg-quick src_valid_mark guard...' \
+ && sed -i 's|\[\[ $proto == -4 ]] && cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1|[[ $proto == -4 ]] \&\& [[ $(sysctl -n net.ipv4.conf.all.src_valid_mark) -ne 1 ]] \&\& cmd sysctl -q net.ipv4.conf.all.src_valid_mark=1|' /usr/bin/wg-quick
 
 COPY init /init
 COPY sockd.conf /etc/sockd.conf
 COPY healthcheck.sh /healthcheck.sh
 
-RUN chmod +x /healthcheck.sh
-
+RUN chmod +x /healthcheck.sh /init
 
 EXPOSE 1080
-EXPOSE 51820
 
 ENV LOCAL_NETWORK=192.168.1.0/24
 

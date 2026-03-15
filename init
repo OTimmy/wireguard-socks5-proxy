@@ -1,18 +1,26 @@
 #!/bin/bash
+set -euo pipefail
 
-wg-quick up wg0
+WG_CONF=/etc/wireguard/wg0.conf
+TMP_WG_CONF=/tmp/wg0.conf
 
-if grep -q "^DNS" /etc/wireguard/wg0.conf; then
-    DNS=$(awk '/^DNS/{print $NF}' /etc/wireguard/wg0.conf)
-    echo "nameserver $DNS" > /etc/resolv.conf
-    echo "DNS found in config and set to $DNS"
-else
-    echo "No DNS found in config, skipping DNS setup."
-fi
+chmod 600 "$WG_CONF"
+
+dns_wg="$(grep DNS "$WG_CONF" | awk '{print $3}')"
+
+# Is set manually in order for wg-quick to skip using resolve command to set the DNS server, which is usable in the container but not on the host, and to avoid wg-quick from adding the DNS server to resolvconf, which is not installed in the container.
+echo "nameserver $dns_wg" > /etc/resolv.conf
+
+grep -vE "DNS = $dns_wg" "$WG_CONF" > "$TMP_WG_CONF"
+chmod 600 "$TMP_WG_CONF"
+
+wg-quick up "$TMP_WG_CONF"
 
 echo "Setting IP route table with given values for local network: $LOCAL_NETWORK"
 # This will allow packages to be routed back to the local network, otherwise they will be routed through wg0
 # Credit to https://github.com/trananhtuan
 gw=$(ip route | awk '/default/ {print $3}')
-ip route add to ${LOCAL_NETWORK} via $gw dev eth0
-sockd
+eth=$(ip route | awk '/default/ {print $5}')
+ip route add to ${LOCAL_NETWORK} via $gw dev $eth
+
+exec sockd
